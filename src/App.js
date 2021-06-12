@@ -1,7 +1,5 @@
 import React, { useState, useEffect, createContext } from "react";
-import Amplify, { Auth, Hub, Storage } from "aws-amplify";
-import { DataStore, Predicates } from "@aws-amplify/datastore";
-import { Post } from "./models";
+import Amplify, { Auth, Hub, API, Storage } from "aws-amplify";
 import {
   BrowserRouter as Router,
   Route,
@@ -11,7 +9,7 @@ import {
 // import styled from "styled-components";
 
 // import query definition
-// import { listPosts } from "./graphql/queries";
+import { listPosts } from "./graphql/queries";
 
 // Components
 import Header from "./components/Header";
@@ -32,7 +30,6 @@ export const UserStatusContext = createContext("");
 function App() {
   const [user, setUser] = useState("no user authenticated");
   const [posts, setPosts] = useState([]);
-  const [medias, setMedias] = useState([]);
 
   useEffect(() => {
     getUserData();
@@ -64,7 +61,9 @@ function App() {
     });
   }, []);
 
-
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const getUserData = async () => {
     try {
@@ -83,51 +82,28 @@ function App() {
     }
   }
 
-  // Datastore
-
-  async function query() {
+  async function fetchPosts() {
     try {
-      const data = await DataStore.query(Post);
-      let dataArr = []
-
-      for (let i = 0; i < data.length; i++) {
-        dataArr.push({
-          id: data[i].id,
-          title: data[i].title,
-          text: data[i].text,
-          media: ""
-        })
-      }
+      const postData = await API.graphql({
+        query: listPosts,
+        variables: { limit: 100 },
+      });
+      let postsArray = postData.data.listPosts.items;
 
       // Fetch media
-      if (dataArr) {
-        dataArr = await Promise.all(
-          dataArr.map(async (post) => {
-            const mediaURL = await Storage.get(post.media);
-            post.media = mediaURL;
-            return post;
-          })
-        );
-      }
+      postsArray = await Promise.all(
+        postsArray.map(async (post) => {
+          const mediaKey = await Storage.get(post.media);
+          post.media = mediaKey;
+          return post;
+        })
+      );
 
-      console.log(dataArr)
-
-      setPosts(dataArr);
-      // setMedias(dataMedia)
+      setPosts(postsArray);
     } catch (err) {
       console.log({ err });
     }
   }
-
-  useEffect(() => {
-    query()
-  }, []);
-
-  useEffect(() => {
-    const subscription = DataStore.observe(Post).subscribe(() => query());
-
-    return () => subscription.unsubscribe();
-  }, [posts]);
 
   return (
 
@@ -140,19 +116,19 @@ function App() {
             <Route
               exact
               path="/"
-              component={() => <Home medias={medias} posts={posts} setPosts={setPosts} />}
+              component={() => <Home posts={posts} setPosts={setPosts} />}
             />
 
             <Route
               exact
               path="/posts"
-              component={() => <Posts medias={medias} posts={posts} setPosts={setPosts} />}
+              component={() => <Posts posts={posts} setPosts={setPosts} />}
             />
 
             <Route
               exact
               path="/post/:id"
-              component={() => <PostDetail medias={medias} posts={posts} setPosts={setPosts} />}
+              component={() => <PostDetail posts={posts} setPosts={setPosts} />}
             />
 
             {user === "no user authenticated" ? (

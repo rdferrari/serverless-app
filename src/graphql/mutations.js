@@ -15,9 +15,6 @@ export const createPost = /* GraphQL */ `
       media
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
     }
   }
 `;
@@ -35,9 +32,6 @@ export const updatePost = /* GraphQL */ `
       media
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
     }
   }
 `;
@@ -55,9 +49,6 @@ export const deletePost = /* GraphQL */ `
       media
       createdAt
       updatedAt
-      _version
-      _deleted
-      _lastChangedAt
     }
   }
 `;

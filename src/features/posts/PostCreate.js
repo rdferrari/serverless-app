@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { Storage, API } from "aws-amplify";
-import { DataStore, Predicates } from "@aws-amplify/datastore";
-import { Post } from "../../models";
 import { createPost } from "../../graphql/mutations";
 import { useForm } from "react-hook-form";
 
@@ -48,18 +46,21 @@ export default function CreatePost({ setPosts, posts }) {
       });
       const mediaUrl = await Storage.get(mediaName);
 
-      await DataStore.save(
-        new Post(postInfo)
-      );
-      // console.log(mediaInfo);
-      // console.log(mediaUrl);
-      // setPosts([...posts, { ...postInfo, media: mediaUrl }]);
+      await API.graphql({
+        query: createPost,
+        variables: { input: postInfo },
+        // @ts-ignore
+        authMode: "AMAZON_COGNITO_USER_POOLS",
+      });
+      console.log(mediaInfo);
+      console.log(mediaUrl);
+      setPosts([...posts, { ...postInfo, media: mediaUrl }]);
       reset({
         title: "",
         text: "",
       });
     } catch (err) {
-      // error
+      console.log(err)
     }
   }
 

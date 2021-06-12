@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
 import { Storage, API } from "aws-amplify";
-import { DataStore, Predicates } from "@aws-amplify/datastore";
-import { Post } from "../../models";
-import { updatePost } from "../../graphql/mutations";
+import { updatePost } from "../../graphql/mutations"
 import { getPost } from "../../graphql/queries";
 import { useForm } from "react-hook-form";
 
@@ -56,6 +54,8 @@ function EditPost({ setPosts, posts, postId }) {
         });
         const mediaUrl = await Storage.get(mediaName);
 
+        console.log(postInfo)
+
         const updatedPost = await API.graphql({
           query: updatePost,
           variables: { input: postInfo },
@@ -64,7 +64,7 @@ function EditPost({ setPosts, posts, postId }) {
 
         const postUpdated = updatedPost.data.updatePost;
 
-        posts.filter((post) => {
+        const post = posts.filter((post) => {
           if (post.id === postId) {
             post.title = postUpdated.title;
             post.text = postUpdated.text;
@@ -73,39 +73,34 @@ function EditPost({ setPosts, posts, postId }) {
           }
         });
 
-        setPosts([...posts]);
+        setPosts([...posts, post]);
         setSaving(false);
       }
 
       // no media to update
-      const original = await DataStore.query(Post, postId)
-      await DataStore.save(
-        Post.copyOf(original, updated => {
-          updated.title = title
-          updated.text = text
-        })
-      )
 
+      const postInfo = { id: post.id, title, text };
+      console.log(postInfo)
+      const updatedPost = await API.graphql({
+        query: updatePost,
+        variables: { input: postInfo },
+        authMode: "AMAZON_COGNITO_USER_POOLS",
+      });
 
-      // const postInfo = { id: post.id, title, text };
-      // const updatedPost = await API.graphql({
-      //   query: updatePost,
-      //   variables: { input: postInfo },
-      //   authMode: "AMAZON_COGNITO_USER_POOLS",
-      // });
+      const postUpdated = updatedPost.data.updatePost;
+      console.log(postUpdated)
 
-      // const postUpdated = updatedPost.data.updatePost;
+      posts.filter((post) => {
+        if (post.id === postId) {
+          post.title = postUpdated.title;
+          post.text = postUpdated.text;
+          return post;
+        }
+      });
 
-      // posts.filter((post) => {
-      //   if (post.id === postId) {
-      //     post.title = postUpdated.title;
-      //     post.text = postUpdated.text;
-      //     return post;
-      //   }
-      // });
-
-      // setPosts([...posts]);
+      setPosts([...posts]);
       setSaving(false);
+      console.log("post saved", posts)
     } catch (err) {
       // error
       console.log(err);
@@ -115,8 +110,14 @@ function EditPost({ setPosts, posts, postId }) {
 
   async function fetchOnePost() {
     try {
-      const postFetched = await DataStore.query(Post, postId)
-      setPost(postFetched);
+
+      const postFetched = posts.filter((post) => {
+        if (post.id === postId) {
+          return post;
+        }
+      });
+
+      setPost(postFetched[0]);
     } catch (err) {
       console.log({ err });
     }
@@ -141,7 +142,6 @@ function EditPost({ setPosts, posts, postId }) {
               defaultValue={post.title}
               {...register("title", { required: true })}
             />
-            {console.log(post)}
 
             {errors.code && <p className="error-message">Title is required</p>}
           </div>

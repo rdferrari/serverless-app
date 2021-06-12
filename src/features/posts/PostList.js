@@ -1,26 +1,34 @@
 import React from "react";
 import { API, Storage } from "aws-amplify";
 import { Link } from "react-router-dom";
-import { DataStore } from "@aws-amplify/datastore";
-import { Post } from "../../models";
+import { deletePost } from "../../graphql/mutations";
+
 
 // import styled from "styled-components";
 
-const List = ({ posts, user }) => {
+const List = ({ posts, setPosts, user }) => {
 
-  async function removePost(postId) {
+  async function removePost(postId, mediaKey) {
     try {
       // method
-      const todelete = await DataStore.query(Post, postId);
-      DataStore.delete(todelete);
+      const postToRemove = {
+        id: postId,
+      };
+      await API.graphql({
+        query: deletePost,
+        variables: { input: postToRemove },
+        authMode: "AMAZON_COGNITO_USER_POOLS",
+      });
 
+      mediaKey = mediaKey.substring(98, mediaKey.indexOf("?"));
+      await Storage.remove(mediaKey);
+
+      const updatedPostsState = posts.filter((post) => post.id !== postId);
+      setPosts(updatedPostsState);
     } catch (err) {
       console.log({ err });
     }
   }
-
-  //     mediaKey = mediaKey.substring(98, mediaKey.indexOf("?"));
-  //     await Storage.remove(mediaKey);
 
   return (
     <div>
@@ -46,7 +54,7 @@ const List = ({ posts, user }) => {
                 )}
               </>
               <div>
-                {console.log(post.media)}
+
                 <img alt={post.title} src={post.media} />
               </div>
             </>

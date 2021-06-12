@@ -16,7 +16,7 @@ function Posts({ posts, setPosts }) {
           {showCreatePost ? (
             user !== "no user authenticated" && (
               <>
-                <CreatePost posts={posts} />
+                <CreatePost posts={posts} setPosts={setPosts} />
               </>
             )
           ) : (
