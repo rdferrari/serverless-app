@@ -1,0 +1,41 @@
+{
+  "auth": {
+    "storymap6eb2c659": {
+      "service": "Cognito",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": [],
+      "customAuth": false
+    }
+  },
+  "api": {
+    "storymap": {
+      "service": "AppSync",
+      "providerPlugin": "awscloudformation",
+      "output": {
+        "authConfig": {
+          "defaultAuthentication": {
+            "authenticationType": "API_KEY",
+            "apiKeyConfig": {
+              "apiKeyExpirationDays": 365,
+              "description": "storyMapApi"
+            }
+          },
+          "additionalAuthenticationProviders": [
+            {
+              "authenticationType": "AMAZON_COGNITO_USER_POOLS",
+              "userPoolConfig": {
+                "userPoolId": "authstorymap6eb2c659"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "storage": {
+    "mapStoryStorage": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation"
+    }
+  }
+}

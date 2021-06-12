@@ -1,0 +1,18 @@
+type Post
+  @model
+  @auth(
+    rules: [
+      { allow: owner, ownerField: "owner" }
+      { allow: public, operations: [read] }
+      { allow: private, operations: [read] }
+    ]
+  ) {
+  id: ID!
+  owner: String
+  relation: String
+  title: String!
+  text: String!
+  media: String!
+  createdAt: String
+  updatedAt: String
+}

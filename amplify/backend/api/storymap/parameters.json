@@ -1,0 +1,11 @@
+{
+  "AppSyncApiName": "storymap",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthCognitoUserPoolId": {
+    "Fn::GetAtt": [
+      "authstorymap6eb2c659",
+      "Outputs.UserPoolId"
+    ]
+  }
+}

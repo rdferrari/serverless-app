@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-storymap-dev-143225-authRole",
+      "UnauthRoleArn": "arn:aws:iam::180844034732:role/amplify-storymap-dev-143225-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::180844034732:role/amplify-storymap-dev-143225-authRole",
+      "Region": "ap-southeast-2",
+      "DeploymentBucketName": "amplify-storymap-dev-143225-deployment",
+      "UnauthRoleName": "amplify-storymap-dev-143225-unauthRole",
+      "StackName": "amplify-storymap-dev-143225",
+      "StackId": "arn:aws:cloudformation:ap-southeast-2:180844034732:stack/amplify-storymap-dev-143225/45393b40-ca5d-11eb-92a5-02c4a40d0358",
+      "AmplifyAppId": "d1wsdxgrs52s5i"
+    },
+    "categories": {
+      "auth": {
+        "storymap6eb2c659": {}
+      }
+    }
+  }
+}
