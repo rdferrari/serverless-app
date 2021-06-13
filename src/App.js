@@ -27,9 +27,19 @@ Amplify.configure(config);
 // User context
 export const UserStatusContext = createContext("");
 
+const tokenTest = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGcxTUkwMVp2VjlkTHF1STdtTkkvN2Nocm1GbStXSjNMM2NHLzAyamNqMGRRSCtjZUpoWXFTTmtrQnBzdXJweHpMN0FBQUNIakNDQWhvR0NTcUdTSWIzRFFFSEJxQ0NBZ3N3Z2dJSEFnRUFNSUlDQUFZSktvWklodmNOQVFjQk1CNEdDV0NHU0FGbEF3UUJMakFSQkF4ZHh3enEwUVJpd0Y4THZPZ0NBUkNBZ2dIUmNhSk1pbDBJV1J6U2c2V1ljb0svZm9GS3ZXbVRFZzNmZVpheDB4aTRhY2pBUVVvQ01Bb056UU1rMnpTWEVkOTFWeHhHM0hXSTVZODViTXJYSDBCdVRKZWhHMUhWK0RlS1N4RnZBbjhxMTNlT0JpYjd2WlQ5dmZwRWFoYUlVZnVCdmNHMWtieXlMRWFmRDZFR3BJcjBzVlNNbE45OXIzdWZqS1JoL2cyMURtQ3owZCtDNDI3emxKNVlZcWVmVjVGUEhSUFllVEloY0Qrd25aVVc1djBCVXdUbWFJNFNQMnlnQmtLYklJeXF2bjBHM1VqZWhma1RvTVJoNkNYVHBQMmxQT0ZxTW93bG0wWkhxOHlCV0VFTU9FUTZ4RE8xd2M4dkFHckhFbzlWTXYyN3JmTWpNMk5uNHdXRUk2cWJYRFZ0dDF3MnJCb2dkZUJ2QytUSDltOXVsNzllcFB3ZEhqUCs1ZVFaaGJYU3VnZ2p3WWJLNnFwZXJvN2VRS2ZQdyt4RFVvWU9aNjIxa2E3dldXbzFIYzVkSHpHSEV6SElJbDFVOUtSV0dEZWNabzlEcUJPakJFR1oyL3M4NmZRb0JTdVBUaVRKSncybyt3cktMcXRuVGFRTVpSaTlvWlNJWGh6cEpmeUoyc3BSZk0rTi9FYlhhQ21rWDFXdEROSWRpYTdkczlZalI1Ly84QzV5anZlWjZxdjB3NG13SDJFNHJkSno2dHdiNUl0aFE0MHVsdjVYZ2k5ckp1Qmw4TWdxZXRJVWhQL0FzS1plWUt5UnFlNmhhNVYra2ZnUXJxK1FJMWFZOU5qd0R2TmorTDI2In0="
+
 function App() {
   const [user, setUser] = useState("no user authenticated");
   const [posts, setPosts] = useState([]);
+
+  const [nextToken, setNextToken] = useState(undefined)
+  const [nextNextToken, setNextNextToken] = useState()
+  const [previousTokens, setPreviousTokens] = useState([])
+
+  const hasNext = !!nextNextToken
+  const hasPrev = previousTokens.length
+  const limit = 2
 
   useEffect(() => {
     getUserData();
@@ -61,10 +71,6 @@ function App() {
     });
   }, []);
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
   const getUserData = async () => {
     try {
       const user = await Auth.currentAuthenticatedUser();
@@ -82,28 +88,63 @@ function App() {
     }
   }
 
-  async function fetchPosts() {
-    try {
-      const postData = await API.graphql({
-        query: listPosts,
-        variables: { limit: 100 },
-      });
-      let postsArray = postData.data.listPosts.items;
+  // useEffect(() => {
+  //   fetchPosts();
+  // }, []);
 
-      // Fetch media
-      postsArray = await Promise.all(
-        postsArray.map(async (post) => {
-          const mediaKey = await Storage.get(post.media);
-          post.media = mediaKey;
-          return post;
-        })
-      );
+  useEffect(() => {
+    const fetch = async () => {
+      // setIsLoading(true)
+      try {
+        const variables = {
+          nextToken,
+          limit,
+        }
+        const postData = await API.graphql({
+          query: listPosts,
+          variables
+        });
+        let postsArray = postData.data.listPosts.items;
+        let nextNextToken = postData.data.listPosts.nextToken
 
-      setPosts(postsArray);
-    } catch (err) {
-      console.log({ err });
+        postsArray = await Promise.all(
+          postsArray.map(async (post) => {
+            const mediaKey = await Storage.get(post.media);
+            post.media = mediaKey;
+            return post;
+          })
+        );
+
+        setNextNextToken(nextNextToken)
+        setPosts(postsArray);
+      } catch (err) {
+        console.log(err)
+      } finally {
+        // setIsLoading(false)
+      }
     }
+
+    fetch()
+  }, [nextToken])
+
+  const next = () => {
+    setPreviousTokens((prev) => [...prev, nextToken])
+    setNextToken(nextNextToken)
+    setNextNextToken(null)
   }
+
+  const prev = () => {
+    setNextToken(previousTokens.pop())
+    setPreviousTokens([...previousTokens])
+    setNextNextToken(null)
+  }
+
+  const reset = () => {
+    setNextToken(undefined)
+    setPreviousTokens([])
+    setNextNextToken(null)
+  }
+
 
   return (
 
@@ -122,7 +163,7 @@ function App() {
             <Route
               exact
               path="/posts"
-              component={() => <Posts posts={posts} setPosts={setPosts} />}
+              component={() => <Posts posts={posts} setPosts={setPosts} next={next} prev={prev} reset={reset} />}
             />
 
             <Route

@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import PostList from "../features/posts/PostList";
 import CreatePost from "../features/posts/PostCreate";
 import { UserStatusContext } from "../App";
+import Pagination from "../components/Pagination";
 
 // import styled from "styled-components";
 
 
-function Posts({ posts, setPosts }) {
+function Posts({ posts, setPosts, next, prev, reset }) {
   const [showCreatePost, setShowCreatePost] = useState(false);
 
   return (
@@ -20,8 +21,14 @@ function Posts({ posts, setPosts }) {
               </>
             )
           ) : (
-            <PostList posts={posts} setPosts={setPosts} user={user} />
+            <>
+              <button onClick={prev}>previous</button>
+              <button onClick={next}>next</button>
+              <button onClick={reset}>reset</button>
+              <PostList posts={posts} setPosts={setPosts} user={user} />
+              {/* <Pagination next={next} prev={prev} /> */}
 
+            </>
           )}
           {user !== "no user authenticated" && (
             <button onClick={() => setShowCreatePost(!showCreatePost)}>
