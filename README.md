@@ -1,7 +1,6 @@
-# Bare posts
+# Serverless Fullstack Web App
 
-AWS Amplify - Auth, API, Storage - React JS.
-Pagination
+React JS + AWS Amplify with GraphQl pagination - Auth, API, Storage.
 
 ## Clone the repo
 
